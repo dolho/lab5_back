@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="static/stylesheets/chat.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Chat App <small id="status" class="badge bg-danger">Status</small></h1>
+
+        <form id="login-form">
+            <div class="mb-3">
+                <label class="form-label">Login:</label>
+                <input class="form-control" id="login" type="text" required value="somebody1">
+                <label class="form-label">Telegram login:</label>
+                <input class="form-control" id="telegramLogin" type="text" value="">
+                <input type="submit" type="button" class="btn btn-primary" value="Login">
+            </div>
+        </form>
+
+        <div id="app" style="display: none;">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-room">
+                Create chat room
+                </button>
+        
+                <h2>Rooms</h2>
+                <div id="rooms-list" class="list-group">
+                </div>
+        
+                <div id="current-room" style="display: none">
+                    <h2>Current room</h2>
+                    <button id="leave-room" type="button" class="btn btn-warning" >
+                        Leave room
+                    </button>
+                    <div id="room-owner" style="display: hide;">
+                        <hr>
+                        <p>You are the owner of this room</p>
+                        <button id="rename-room-button" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#rename-room">
+                            Rename chat room
+                        </button>
+                        <button id="remove-room-button" type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#remove-room">
+                            Remove chat room
+                        </button>
+                        <hr>
+                    </div>
+        
+                    <h3>Members</h3>
+                    <ul id="members-list" class="list-group">
+                    </ul>
+        
+                    <h3>Room messages</h3>
+        
+                    <form id="send-message-form">
+                        <div class="mb-3">
+                        <label class="form-label">Your new message text:</label>
+                        <textarea class="form-control" id="sendMessageText" required rows="4" cols="40" placeholder="Type your message here..."></textarea>
+                        <input type="submit" type="button" class="btn btn-primary" value="Send">
+                        </div>
+                    </form>
+        
+                    <ul id="messages-list" class="list-group">
+                    </ul>
+                </div>
+        </div>
+        
+        
+    </div>
+
+    <div id="create-room" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create new room</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-room-form">
+                    <div class="mb-3">
+                      <label class="form-label">Room name</label>
+                      <input type="text" class="form-control" id="roomName" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="confirm-create-room" type="button" class="btn btn-primary" data-bs-dismiss="modal">Create room</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="rename-room" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rename room</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-room-form">
+                    <fieldset disabled>
+                        <div class="mb-3">
+                            <label class="form-label">Old room name</label>
+                            <input type="text" class="form-control" id="oldRoomName" required>
+                        </div>
+                    </fieldset>
+                    <div class="mb-3">
+                      <label class="form-label">New room name</label>
+                      <input type="text" class="form-control" id="newRoomName" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="confirm-rename-room" type="button" class="btn btn-primary" data-bs-dismiss="modal">Rename room</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="remove-room" class="modal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Remove room</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-room-form">
+                    <fieldset disabled>
+                        <div class="mb-3">
+                            <label class="form-label">Room name</label>
+                            <input type="text" class="form-control" id="removeRoomName" required>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button id="confirm-remove-room" type="button" class="btn btn-danger" data-bs-dismiss="modal">Remove room</button>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js" integrity="sha384-b5kHyXgcpbZJO/tY9Ul7kGkf1S0CWuKcCD38l8YkeH8z8QjE0GmW1gYU5S9FOnJ0" crossorigin="anonymous"></script>
+    <script src="static/javascripts/chat.js"></script>
+</body>
+</html>

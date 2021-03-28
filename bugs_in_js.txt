@@ -1,0 +1,7 @@
+1) В качестве телеграм логина, код принимает значение из поля для обычного логина (677 строка)
+2) Object.SetInstanseOf -- несуществующий метод (498 строка)
+3)  CLIENT_JOIN_ROOM: "remove-room", - должно быть  join-room (56 строка)
+    CLIENT_LEAVE_ROOM: "remove-room", - должно быть leave-room (57 строка)
+4) При выходе из комнаты (кнопка 'Leave room') не отправляет 'leave-room'
+5) getMessages -- функция нигде не вызывается (добавил в вызов в 390 строке)
+6) CLIENT_RENAME_ROOM вместо CLIENT_REMOVE_ROOM (114 строка)
