@@ -1,1 +1,1 @@
-web: uvicorn server:app --workers 4 --reload --port $PORT
+web: uvicorn server:app --port $PORT --host=0.0.0.0 --reload --workers 4 
