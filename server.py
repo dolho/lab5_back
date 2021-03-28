@@ -16,6 +16,7 @@ request_handler = RequestHandler()
 
 app = FastAPI()
 
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 current_dir = dirname(__file__)  # this will be the location of the current .py file
