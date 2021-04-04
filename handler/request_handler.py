@@ -67,7 +67,12 @@ class RequestHandler:
         return message_dict
 
     def router(self, data: str):
-
+        """
+        returns list of dicts with structure:
+        [{'message_type': 'broad' or 'single', 'app_message': app_message}]
+        :param data:
+        :return:
+        """
         resulting_messages = []
         try:
             app_message = json.loads(data)
@@ -87,6 +92,7 @@ class RequestHandler:
             usr = self.get_user(login_telegram['login'])
             chatroom_before = usr['current_chat']
         try:
+            # print(self.ALLOWED_TYPE[message_type])
             payload = self.ALLOWED_TYPE[message_type](app_message, login_telegram['login'],
                                                       login_telegram['telegramLogin'])
 
@@ -95,17 +101,17 @@ class RequestHandler:
         if not payload:
             return None
         answer_to_user_who_asked = self.construct_app_message(self.OUTPUT_TYPE_MAP[message_type], payload)
-
+       # print('Answer to user who asked: ', answer_to_user_who_asked)
         if message_type not in ['create-room', 'rename-room', 'remove-room']:
-            resulting_messages.append({'message_type': 'single', 'app_message': answer_to_user_who_asked})
+            resulting_messages.append({'message_type': 'broad', 'users': [login_telegram['login']], 'app_message': answer_to_user_who_asked})
         # Here we decide, should we broadcast message to users in the chatroom, or not
 
         if message_type in self.BROADCAST_ROOM_MEMBERS:
             broad = self.broad_message_router(login_telegram, chatroom_before, message_type, answer_to_user_who_asked)
-            print('broad:   ', broad)
+           # print('broad:   ', broad)
             if broad is not None:
                 resulting_messages.append(broad)
-        print(resulting_messages)
+        # print(resulting_messages)
         return resulting_messages
 
     def broad_message_router(self, login_telegram, chatroom_before, message_type, message=''):
@@ -144,12 +150,13 @@ class RequestHandler:
         :param app_message:
         :return:
         """
+        # print('Inside get-token: ',app_message)
         payload = app_message.get('payload')
         if not payload:
             return None
         login = payload.get('login')
         telegram_login = payload.get('telegramLogin')
-        print('nes_login teleg', telegram_login)
+        # print('nes_login teleg', telegram_login)
         if not login:
             return None
         self._db.add_or_update_user(login, telegram_login)  # We have to ensure that user exists, change his telegram login if he have a new one or register him
@@ -256,7 +263,18 @@ class RequestHandler:
             return self.construct_chat_room(room)
         return ''
 
+    def is_telegram_login_registered(self, telegram_login, chat_id = 0) -> {}:
+        user = self._db.is_telegram_login_registered(telegram_login, chat_id)
+        if not user:
+            return None
+        return {'login': user.login, 'telegram_login': user.telegram_login,
+                'current_chat': user.current_chat, 'telegram_chat_id': user.telegram_chat_id}
 
+    def is_user_in_room(self, login='', telegram_login=''):
+        return self._db.is_in_room(login, telegram_login)
+
+    def is_user_in_given_room(self, login='', telegram_login='', room=''):
+        return self._db.is_user_in_given_room(login, telegram_login, room)
 
     @staticmethod
     def construct_member_joined(login, *args, **kwargs):

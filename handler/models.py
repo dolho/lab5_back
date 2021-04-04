@@ -9,6 +9,7 @@ class User(Base):
     login = Column(String, primary_key=True, index=True)
     telegram_login = Column(String)
     current_chat = Column(String, ForeignKey("ChatRooms.name"), nullable=True,)
+    telegram_chat_id = Column(BigInteger, nullable=True)
     __table_args__ = (UniqueConstraint('login', 'telegram_login'),)
 
     def __init__(self, login, telegram_login):

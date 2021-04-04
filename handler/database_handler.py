@@ -70,6 +70,8 @@ class DataBaseHandler:
         user = self._session.query(User).filter(User.login == login).first()
         # print(f'Inside db, {user}, {chat},')
         if chat:
+            if user.current_chat == room_name:
+                return False
             user.current_chat = room_name
             self._session.commit()
             return True
@@ -105,7 +107,7 @@ class DataBaseHandler:
     def get_last_10_messages(self, room_name):
         messages = self._session.query(Messages).\
             filter(Messages.chat_room == room_name).\
-            order_by(Messages.timestamp.desc()).limit(10)
+            order_by(Messages.timestamp.asc()).limit(10)
         return messages
 
     def post_room(self, room_name, owner):
@@ -142,3 +144,48 @@ class DataBaseHandler:
             self._session.commit()
             return room
         return None
+
+    def is_telegram_login_registered(self, telegram_login, chat_id = 0):
+        """
+        If chat id is not 0, the user's chat id would be replaced with the new one
+        :param telegram_login:
+        :param chat_id:
+        :return:
+        """
+        user = self._session.query(User).filter(User.telegram_login == telegram_login).first()
+        if user and chat_id > 0:
+            user.telegram_chat_id = chat_id
+            self._session.commit()
+            return user
+        elif user:
+            return user
+        else:
+            return None
+
+    def is_in_room(self, login = '', telegram_login = ''):
+        try:
+            user = None
+            if login:
+                user = self._session.query(User).filter(User.login == login).first()
+            elif telegram_login:
+                user =self._session.query(User).filter(User.telegram_login == telegram_login).first()
+            if user.current_chat:
+                return True
+            else:
+                return False
+        except:
+            return False
+
+    def is_user_in_given_room(self, login = '', telegram_login = '', room_name=''):
+        user = None
+        if login:
+            user = self._session.query(User).filter(User.login == login).first()
+        elif telegram_login:
+            user = self._session.query(User).filter(User.telegram_login == telegram_login).first()
+        if room_name:
+            if user.current_chat == room_name:
+                return True
+            return False
+        elif user.current_chat:
+            return False
+        return False
