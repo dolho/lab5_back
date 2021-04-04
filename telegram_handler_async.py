@@ -123,7 +123,7 @@ class TelegramHandlerAsync:
                                 await self._bot.send_message(chat_id=self._users[i], text=msg)
                                 self._teleg_login_chat_room[self._login_telegram_login[i]] = ''
                         try:
-                            self._rooms.remove(app_message['payload']['name'])
+                            self._rooms.remove(app_message['payload'])
                         except ValueError as e:
                             print(e)
                         # with concurrent.futures.ThreadPoolExecutor() as pool:
@@ -148,7 +148,7 @@ class TelegramHandlerAsync:
                             await self._bot.send_message(chat_id=self._users[i], text=msg)
                             continue
                     elif app_message['type'] == MessageTypes.SERVER_ROOM_CREATED:
-                        self._rooms.append(app_message['payload']['name'])
+                        self._rooms.append(app_message['payload'])
                         with concurrent.futures.ThreadPoolExecutor() as pool:
                             server_response = await loop.run_in_executor(
                                 pool, self.request_handler.is_user_in_room, i, '')
@@ -218,4 +218,3 @@ class TelegramHandlerAsync:
             await disp.start_polling()
         finally:
             await self._bot.close()
-
