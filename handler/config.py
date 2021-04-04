@@ -17,5 +17,5 @@ class ProductionConfig:
     HOST = os.environ.get('HOST')
     SALT = os.environ.get('SALT')
 
-class Config(DevelopmentConfig):
+class Config(ProductionConfig):
     pass

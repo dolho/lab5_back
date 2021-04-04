@@ -6,7 +6,7 @@ from messages import MessageTypes, create_app_message
 import datetime
 import json
 
-ADRESS = 'http://127.0.0.31'
+ADRESS = 'https://still-mesa-73593.herokuapp.com/'
 
 class TelegramHandlerAsync:
 
