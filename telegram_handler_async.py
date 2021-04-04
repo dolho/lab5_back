@@ -28,8 +28,9 @@ class TelegramHandlerAsync:
         telegram_login = event.from_user.username
         chat_id = event.chat.id
         user = self.request_handler.is_telegram_login_registered(telegram_login, chat_id)
-        self._login_telegram_login[user['login']] = user['telegram_login']
         if user:
+            self._login_telegram_login[user['login']] = user['telegram_login']
+            self._teleg_login_chat_room[telegram_login] = {}
             # print('If worked')
             await self._bot.send_message(chat_id=chat_id, text="You are registered")
             msg_to_server = json.dumps(create_app_message('', MessageTypes.CLIENT_GET_TOKEN,
@@ -218,3 +219,4 @@ class TelegramHandlerAsync:
             await disp.start_polling()
         finally:
             await self._bot.close()
+
