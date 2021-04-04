@@ -15,11 +15,12 @@ class TelegramHandlerAsync:
         self.request_handler = request_handler
         self._users = {}  # [{user_login: chat_id}]
         self._telegram_login_token = {}  # user_telegram_login: token
-        self._telegram_login_chat_room = {}
+        self._teleg_login_chat_room = {}
         self._rooms = []
         self.websocket_manager = websocket_manager
         self.rpc_manager = rpc_manager
         self._bot = Bot(token=self._token)
+        self._login_telegram_login = {}
 
     async def start_handler(self, event: types.Message):
         loop = asyncio.get_running_loop()
@@ -27,6 +28,7 @@ class TelegramHandlerAsync:
         telegram_login = event.from_user.username
         chat_id = event.chat.id
         user = self.request_handler.is_telegram_login_registered(telegram_login, chat_id)
+        self._login_telegram_login[user['login']] = user['telegram_login']
         if user:
             # print('If worked')
             await self._bot.send_message(chat_id=chat_id, text="You are registered")
@@ -77,6 +79,7 @@ class TelegramHandlerAsync:
             return
         msg_to_server = json.dumps(create_app_message(self._telegram_login_token[event.from_user.username],
                                                        MessageTypes.CLIENT_JOIN_ROOM, self._rooms[room_number - 1]['name']))
+        self._teleg_login_chat_room[event.from_user.username] = self._rooms[room_number - 1]
         with concurrent.futures.ThreadPoolExecutor() as pool:
             server_response = await loop.run_in_executor(
                 pool, self.request_handler.router, msg_to_server)
@@ -86,6 +89,8 @@ class TelegramHandlerAsync:
             # print('after websocket')
 
     async def notify_other_clients(self, server_response):
+        if not server_response:
+            return None
         for i in server_response:
             json_answer = json.dumps(i['app_message'], default=str)
             await self.websocket_manager.broadcast(json_answer, i['users'])
@@ -110,17 +115,24 @@ class TelegramHandlerAsync:
             msg = self.view_router_response(app_message)
             for i in self._users:
                     if app_message['type'] == MessageTypes.SERVER_ROOM_REMOVED:
+                        if i in self._login_telegram_login:
+                            if self._teleg_login_chat_room[self._login_telegram_login[i]]['name'] == app_message['payload']['name']:
+                                await self._bot.send_message(chat_id=self._users[i], text=msg)
+                                self._teleg_login_chat_room[self._login_telegram_login[i]] = ''
+                            elif self._teleg_login_chat_room[self._login_telegram_login[i]]['name'] == '':
+                                await self._bot.send_message(chat_id=self._users[i], text=msg)
+                                self._teleg_login_chat_room[self._login_telegram_login[i]] = ''
                         try:
                             self._rooms.remove(app_message['payload']['name'])
                         except ValueError as e:
                             print(e)
-                        with concurrent.futures.ThreadPoolExecutor() as pool:
-                            server_response = await loop.run_in_executor(
-                                pool, self.request_handler.is_user_in_given_room, i, '', app_message['payload']['name'])
-                        if server_response:
-                            msg = self.view_router_response(app_message)
-                            await self._bot.send_message(chat_id=self._users[i], text=msg)
-                            continue
+                        # with concurrent.futures.ThreadPoolExecutor() as pool:
+                        #     server_response = await loop.run_in_executor(
+                        #         pool, self.request_handler.is_user_in_given_room, i, '', app_message['payload']['name'])
+                        # if server_response:
+                        #     msg = self.view_router_response(app_message)
+                        #     await self._bot.send_message(chat_id=self._users[i], text=msg)
+                        #     continue
                     elif app_message['type'] == MessageTypes.SERVER_ROOM_RENAMED:
                         try:
                             index = self._rooms.index(app_message['payload']['oldRoomName'])
@@ -206,3 +218,4 @@ class TelegramHandlerAsync:
             await disp.start_polling()
         finally:
             await self._bot.close()
+
