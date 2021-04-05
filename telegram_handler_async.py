@@ -87,6 +87,14 @@ class TelegramHandlerAsync:
         #loop = asyncio.get_running_loop()
         await self.notify_other_clients(server_response)
         await self.get_members(event, self._rooms[room_number - 1]['name'])
+        msg_to_server = json.dumps(create_app_message(self._telegram_login_token[event.from_user.username],
+                                                      MessageTypes.CLIENT_GET_LAST_MESSAGES_LIST,
+                                                      self._rooms[room_number - 1]['name']))
+        with concurrent.futures.ThreadPoolExecutor() as pool:
+            server_response = await loop.run_in_executor(
+                pool, self.request_handler.router, msg_to_server)
+        for i in server_response:
+            await self.broadcast_to(i['app_message'], i['users'])
             # print('after websocket')
 
     async def notify_other_clients(self, server_response):
@@ -160,7 +168,7 @@ class TelegramHandlerAsync:
         else:
             for i in users:
                 if i in self._users:
-                    msg = self.view_router_response(app_message)
+                    msg = self.view_router_response(app_message, i)
                     if not msg:
                         continue
                     await self._bot.send_message(chat_id=self._users[i], text=msg)
@@ -180,11 +188,12 @@ class TelegramHandlerAsync:
             await self.notify_other_clients(server_response)
 
 
-    @staticmethod
-    def view_router_response(app_message):
+
+    def view_router_response(self, app_message, i = ''):
         if app_message['type'] == MessageTypes.SERVER_CURRENT_ROOM_CHANGED:
             if app_message["payload"] == '':
                 return None
+            self._teleg_login_chat_room[self._login_telegram_login[i]] = app_message["payload"]
             return f'You joined the room {app_message["payload"]["name"]}'
         elif app_message['type'] == MessageTypes.SERVER_MEMBER_JOINED:
             return f'Member {app_message["payload"]} joined'
@@ -192,6 +201,12 @@ class TelegramHandlerAsync:
             message = app_message['payload']
             date_time_obj = datetime.datetime.fromisoformat(str(message['timestamp']))
             return f'[{message["author"]}][{date_time_obj.time()}]: {message["text"]}'
+        elif app_message['type'] == MessageTypes.SERVER_LAST_MESSAGES_LIST:
+            res = []
+            for message in app_message['payload']:
+                date_time_obj = datetime.datetime.fromisoformat(str(message['timestamp']))
+                res.append( f'[{message["author"]}][{date_time_obj.time()}]: {message["text"]})\n')
+            return ''.join(res)
         elif app_message['type'] == MessageTypes.SERVER_MEMBERS_LIST:
             i = 1
             res = ['Members in this room: \n']

@@ -188,6 +188,4 @@ async def websocket_endpoint(websocket: WebSocket):
         # await manager.broadcast(f"Client #1 left the chat")
 
 
-#TODO Реализовать все методы, которые требуются протоколом (сделано)
-#TODO Реализовать телеграм клиент
-#TODO (???) RPC (сделано все, кроме добавления-удаления-переименования комнат)
+
