@@ -124,13 +124,16 @@ class TelegramHandlerAsync:
             msg = self.view_router_response(app_message)
             for i in self._users:
                     if app_message['type'] == MessageTypes.SERVER_ROOM_REMOVED:
-                        if i in self._login_telegram_login:
-                            if self._teleg_login_chat_room[self._login_telegram_login[i]]['name'] == app_message['payload']['name']:
-                                await self._bot.send_message(chat_id=self._users[i], text=msg)
-                                self._teleg_login_chat_room[self._login_telegram_login[i]] = ''
-                            elif self._teleg_login_chat_room[self._login_telegram_login[i]]['name'] == '':
-                                await self._bot.send_message(chat_id=self._users[i], text=msg)
-                                self._teleg_login_chat_room[self._login_telegram_login[i]] = ''
+                        try:
+                            if i in self._login_telegram_login:
+                                if self._teleg_login_chat_room[self._login_telegram_login[i]]['name'] == app_message['payload']['name']:
+                                    await self._bot.send_message(chat_id=self._users[i], text=msg)
+                                    self._teleg_login_chat_room[self._login_telegram_login[i]] = ''
+                                elif self._teleg_login_chat_room[self._login_telegram_login[i]]['name'] == '':
+                                    await self._bot.send_message(chat_id=self._users[i], text=msg)
+                                    self._teleg_login_chat_room[self._login_telegram_login[i]] = ''
+                        except KeyError as k:
+                            print(k)
                         try:
                             self._rooms.remove(app_message['payload'])
                         except ValueError as e:
